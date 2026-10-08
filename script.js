@@ -250,9 +250,9 @@ async function serverAction(action) {
 
   btn.disabled = true;
   if (action === 'start') {
-    btnRestart = true;
+    btnRestart.disabled = true;
   } else if (action === 'restart') {
-    btnStart = true;
+    btnStart.disabled = true;
   }
 
   appendLog(">> Melakukan: " + action);
