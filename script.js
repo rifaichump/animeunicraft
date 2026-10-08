@@ -31,6 +31,9 @@ let wsRetryTimer = null;
 const MAX_LOG_LINES = 1000;
 const TOKEN_KEY = "anime_unicraft_token";
 
+let serverOnline = false;
+let stateRefreshTimer = null;
+
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const token = tokenInput.value.trim();
@@ -85,6 +88,8 @@ function showControl() {
   tokenInput.value = "";
   clearLog();
   appendLog("Terhubung. Menunggu log...");
+  applyButtonState("busy");
+  checkServer();
   connectWS();
 }
 
@@ -148,7 +153,10 @@ function connectWS() {
     return;
   }
 
-  ws.onopen = () => setWsStatus(true);
+  ws.onopen = () => {
+    setWsStatus(true);
+    checkServer();
+  };
 
   ws.onmessage = (ev) => {
     let msg;
@@ -164,12 +172,9 @@ function connectWS() {
       clearLog();
       msg.data.forEach((line) => appendLog(String(line)));
     } else if (msg.type === "action") {
-      if (msg.data === "started") {
-        btnStart.disabled = false;
-        btnRestart.disabled = false;
-      } else if (msg.data === "stoped") {
-        btnStop.disabled = false;
-      }
+      handleActionSignal(msg.data);
+    } else if (typeof msg.type === "string") {
+      handleActionSignal(msg.type);
     }
   };
 
@@ -243,32 +248,90 @@ function timeNow() {
 
 clearLogBtn.addEventListener("click", clearLog);
 clearLog();
+applyButtonState("offline");
+
+function applyButtonState(state) {
+  if (state === "busy") {
+    btnStart.disabled = true;
+    btnRestart.disabled = true;
+    btnStop.disabled = true;
+    return;
+  }
+
+  const online = state === "online";
+  btnStart.disabled = online;
+  btnRestart.disabled = !online;
+  btnStop.disabled = !online;
+}
+
+function handleActionSignal(name) {
+  const n = String(name || "").trim().toLowerCase();
+
+  if (n === "started") {
+    clearTimeout(stateRefreshTimer);
+    stateRefreshTimer = null;
+    serverOnline = true;
+    applyButtonState("online");
+  } else if (n === "stoped" || n === "stopped") {
+    clearTimeout(stateRefreshTimer);
+    stateRefreshTimer = null;
+    serverOnline = false;
+    applyButtonState("offline");
+  } else if (n === "starting" || n === "stopping" || n === "restarting") {
+    applyButtonState("busy");
+  }
+}
+
+function scheduleStateRefresh() {
+  clearTimeout(stateRefreshTimer);
+  stateRefreshTimer = setTimeout(() => {
+    stateRefreshTimer = null;
+    checkServer();
+  }, 4000);
+}
+
+async function checkServer() {
+  if (!authToken) return;
+
+  try {
+    const res = await fetch(CONFIG.apiBase + "/check/server", {
+      method: "GET",
+      headers: { Authorization: "Bearer " + authToken },
+    });
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    const online = Boolean(
+      data.isOnline !== undefined ? data.isOnline : data.data && data.data.isOnline
+    );
+
+    serverOnline = online;
+    applyButtonState(online ? "online" : "offline");
+  } catch (err) {}
+}
 
 async function serverAction(action) {
-  const btnMap = { start: btnStart, restart: btnRestart, stop: btnStop };
-  const btn = btnMap[action];
-
-  btn.disabled = true;
-  if (action === 'start') {
-    btnRestart.disabled = true;
-  } else if (action === 'restart') {
-    btnStart.disabled = true;
+  if (!connected) {
+    setActionStatus("Gagal mengirim perintah: Sambungan terputus", "err");
+    setTimeout(() => (actionStatus.hidden = true), 4000);
+    return;
   }
 
   appendLog(">> Melakukan: " + action);
-
-  if (!connected) {
-    setActionStatus("Gagal mengirim perintah: Sambungan terputus", "err");
-    btn.disabled = false;
-    return;
-  }
+  applyButtonState("busy");
 
   try {
     const res = await fetch(CONFIG.apiBase + "/" + action, {
       method: "GET",
       headers: { Authorization: "Bearer " + authToken },
     });
-  } catch (err) {} finally {
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    scheduleStateRefresh();
+  } catch (err) {
+    applyButtonState(serverOnline ? "online" : "offline");
+  } finally {
     setTimeout(() => (actionStatus.hidden = true), 4000);
   }
 }
