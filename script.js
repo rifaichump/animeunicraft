@@ -44,39 +44,7 @@ loginForm.addEventListener("submit", async (e) => {
 
     const data = await res.json();
     if (data.success) {
-      authToken = data.token_auth;
-      showControl();
-    } else {
-      showLoginError("Token tidak valid.");
-    }
-  } catch (err) {
-    showLoginError("Gagal terhubung ke server. (" + err.message + ")");
-  } finally {
-    setLoginBusy(false);
-  }
-});
-
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const token = tokenInput.value.trim();
-  if (!token) return;
-
-  setLoginBusy(true);
-  hideLoginError();
-
-  try {
-    const res = await fetch(CONFIG.authUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: token }),
-    });
-
-    if (!res.ok) throw new Error("HTTP " + res.status);
-
-    const data = await res.json();
-
-    if (data.success && data.token_auth) {
-      authToken = data.token_auth;
+      authToken = data.token;
       showControl();
     } else {
       showLoginError("Token tidak valid.");
