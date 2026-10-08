@@ -24,7 +24,6 @@
 
 html {
   height: 100%;
-  /* Cegah zoom: hanya pan, tanpa double-tap zoom */
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -53,7 +52,6 @@ body {
   display: none !important;
 }
 
-/* ============ LOGIN ============ */
 #login-view {
   align-items: center;
   justify-content: center;
@@ -106,7 +104,31 @@ input:focus {
   font-size: 13px;
 }
 
-/* ============ BUTTONS ============ */
+.loading {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .5px;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
@@ -190,7 +212,6 @@ button:disabled {
   border-color: var(--muted);
 }
 
-/* ============ CONTROL ============ */
 .topbar {
   display: flex;
   align-items: center;
@@ -243,7 +264,6 @@ button:disabled {
   margin: 0 auto;
 }
 
-/* Panel log */
 .panel {
   flex: 1;
   min-height: 0;
@@ -316,7 +336,6 @@ button:disabled {
   font-style: italic;
 }
 
-/* Aksi */
 .actions {
   display: flex;
   gap: 12px;
@@ -331,7 +350,6 @@ button:disabled {
 .action-status.ok { color: #6ee7a0; }
 .action-status.err { color: #fca5a5; }
 
-/* Scrollbar */
 .log::-webkit-scrollbar {
   width: 10px;
 }
@@ -353,7 +371,6 @@ button:disabled {
   .content { padding: 14px; gap: 12px; }
   .topbar { padding: 12px 14px; }
 
-  /* Tombol tetap bersebelahan (Start | Restart | Stop) */
   .actions {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -368,8 +385,6 @@ button:disabled {
     white-space: nowrap;
   }
 
-  /* View control dikunci setinggi layar: log fleksibel,
-     tombol selalu terlihat tepat di bawah log (tidak ke bawah) */
   #control-view {
     height: 100vh;
     height: 100dvh;
@@ -380,7 +395,7 @@ button:disabled {
     min-height: 0;
     gap: 10px;
   }
-  /* Log dibatasi setinggi ~70% layar, tombol di bawahnya */
+
   #control-view .panel {
     flex: 0 0 auto;
     min-height: 0;
@@ -398,8 +413,7 @@ button:disabled {
 
   .panel-head { padding: 8px 12px; }
   .panel-tools { gap: 8px; }
-
-  /* ≥16px cegah iOS auto-zoom saat fokus input */
+  
   input[type="password"],
   input[type="text"] { font-size: 16px; padding: 12px 14px; }
 

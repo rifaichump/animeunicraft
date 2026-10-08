@@ -10,7 +10,13 @@
 </head>
 <body>
 
-  <div id="login-view" class="view">
+  <div id="loading-view" class="view loading">
+    <div class="spinner"></div>
+    <p class="loading-text">Memuat...</p>
+  </div>
+
+  <!-- VIEW: LOGIN -->
+  <div id="login-view" class="view" hidden>
     <form id="login-form" class="card">
       <h1>Anime Unicraft - Server Control</h1>
       <p class="muted">Masukkin token disini</p>
@@ -29,7 +35,6 @@
     </form>
   </div>
 
-  <!-- VIEW: CONTROL -->
   <div id="control-view" class="view" hidden>
     <header class="topbar">
       <h1>Server Control</h1>
@@ -40,7 +45,6 @@
     </header>
 
     <main class="content">
-      <!-- LOG -->
       <section class="panel">
         <div class="panel-head">
           <span class="panel-title">Log</span>
@@ -54,8 +58,7 @@
         </div>
         <div id="log" class="log"></div>
       </section>
-
-      <!-- AKSI -->
+      
       <div class="actions">
         <button type="button" id="btn-start" class="btn btn-start">Start</button>
         <button type="button" id="btn-restart" class="btn btn-restart">Restart</button>
@@ -67,7 +70,6 @@
   </div>
 
   <script>
-    // Blokir pinch-zoom (iOS Safari mengabaikan user-scalable=no)
     ["gesturestart", "gesturechange"].forEach(function (evt) {
       document.addEventListener(evt, function (e) { e.preventDefault(); });
     });

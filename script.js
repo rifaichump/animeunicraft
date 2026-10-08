@@ -1,11 +1,13 @@
 const CONFIG = {
-  authUrl: "https://api.animeunicraft.my.id",
+  authUrl: "https://api.animeunicraft.my.id/login/token",
   apiBase: "https://api.animeunicraft.my.id/servermc",
-  wsUrl: "wss://api.animeunicraft.my.id",
+  checkTokenUrl: "https://api.animeunicraft.my.id", 
+  wsUrl: "wss://api.animeunicraft.my.id"
 };
 
 const loginView = document.getElementById("login-view");
 const controlView = document.getElementById("control-view");
+const loadingView = document.getElementById("loading-view");
 const loginForm = document.getElementById("login-form");
 const tokenInput = document.getElementById("token-input");
 const loginBtn = document.getElementById("login-btn");
@@ -27,6 +29,7 @@ let ws = null;
 let connected = false;
 let wsRetryTimer = null;
 const MAX_LOG_LINES = 1000;
+const TOKEN_KEY = "anime_unicraft_token";
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -38,13 +41,19 @@ loginForm.addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch(CONFIG.authUrl, {
-      method: "GET",
-      headers: { Authorization: "Bearer " + token },
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        token: token
+      })
     });
 
     const data = await res.json();
     if (data.success) {
       authToken = token;
+      try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
       showControl();
     } else {
       showLoginError(data.message);
@@ -82,15 +91,54 @@ function showControl() {
 logoutBtn.addEventListener("click", () => {
   disconnectWS();
   authToken = "";
+  try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
   controlView.hidden = true;
   loginView.hidden = false;
   hideLoginError();
+  tokenInput.focus();
 });
+
+async function checkSession() {
+  let saved = "";
+  try {
+    try { saved = localStorage.getItem(TOKEN_KEY) || ""; } catch (e) {};
+
+    const res = await fetch(CONFIG.checkTokenUrl, {
+      method: "GET",
+      headers: { Authorization: "Bearer " + saved },
+    });
+
+    const data = await res.json();
+    return data.success
+  } catch (e) {
+    return false;
+  }
+}
+
+async function boot() {
+  const ok = await checkSession();
+  loadingView.hidden = true;
+
+  if (ok) {
+    let saved = "";
+    try { saved = localStorage.getItem(TOKEN_KEY) || ""; } catch (e) {}
+    if (saved) {
+      authToken = saved;
+      showControl();
+      return;
+    }
+  }
+
+  loginView.hidden = false;
+  tokenInput.focus();
+}
+
+boot();
 
 function connectWS() {
   disconnectWS();
 
-  const url = CONFIG.wsUrl + `?token=${authToken ?? "none"}`
+  const url = CONFIG.wsUrl + `?token=${authToken ?? "none"}`;
 
   try {
     ws = new WebSocket(url);
@@ -115,6 +163,13 @@ function connectWS() {
     } else if (msg.type === "getlogall" && Array.isArray(msg.data)) {
       clearLog();
       msg.data.forEach((line) => appendLog(String(line)));
+    } else if (msg.type === "action") {
+      if (msg.data === "started") {
+        btnStart.disabled = false;
+        btnRestart.disabled = false;
+      } else if (msg.data === "stoped") {
+        btnStop.disabled = false;
+      }
     }
   };
 
@@ -194,10 +249,11 @@ async function serverAction(action) {
   const btn = btnMap[action];
 
   btn.disabled = true;
-  setActionStatus("Mengirim perintah " + action + "...", "");
+  appendLog(">> Melakukan: " + action);
 
   if (!connected) {
-    setActionStatus("Gagal mengirim perintah: Sambungan terputus");
+    setActionStatus("Gagal mengirim perintah: Sambungan terputus", "err");
+    btn.disabled = false;
     return;
   }
 
@@ -206,14 +262,7 @@ async function serverAction(action) {
       method: "GET",
       headers: { Authorization: "Bearer " + authToken },
     });
-
-    if (!res.ok) throw new Error("HTTP " + res.status);
-
-    setActionStatus("Perintah " + action + " berhasil dikirim.", "ok");
-  } catch (err) {
-    setActionStatus("Gagal: " + err.message, "err");
-  } finally {
-    btn.disabled = false;
+  } catch (err) {} finally {
     setTimeout(() => (actionStatus.hidden = true), 4000);
   }
 }
@@ -227,5 +276,3 @@ function setActionStatus(msg, kind) {
 btnStart.addEventListener("click", () => serverAction("start"));
 btnRestart.addEventListener("click", () => serverAction("restart"));
 btnStop.addEventListener("click", () => serverAction("stop"));
-
-tokenInput.focus();
