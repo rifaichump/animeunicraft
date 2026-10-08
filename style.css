@@ -22,11 +22,19 @@
   padding: 0;
 }
 
-html, body {
+html {
   height: 100%;
+  /* Cegah zoom: hanya pan, tanpa double-tap zoom */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
+  height: 100%;
+  touch-action: pan-x pan-y;
+  overscroll-behavior: none;
   background: var(--bg);
   color: var(--text);
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
@@ -36,6 +44,7 @@ body {
 
 .view {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -341,8 +350,40 @@ button:disabled {
 }
 
 @media (max-width: 560px) {
-  .content { padding: 14px; }
-  .actions { flex-direction: column; }
-  .log { min-height: 240px; max-height: calc(100vh - 320px); }
+  .content { padding: 14px; gap: 12px; }
   .topbar { padding: 12px 14px; }
+
+  /* Tombol tetap bersebelahan (Start | Restart | Stop) */
+  .actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 14px 4px;
+    font-size: 13px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .log {
+    min-height: 220px;
+    max-height: calc(100dvh - 320px);
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .panel-head { padding: 8px 12px; }
+  .panel-tools { gap: 8px; }
+
+  /* ≥16px cegah iOS auto-zoom saat fokus input */
+  input[type="password"],
+  input[type="text"] { font-size: 16px; padding: 12px 14px; }
+
+  .topbar h1 { font-size: 15px; }
+
+  .card { padding: 26px 20px; }
+  #login-view { padding: 16px; }
 }

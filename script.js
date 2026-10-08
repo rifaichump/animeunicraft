@@ -44,10 +44,10 @@ loginForm.addEventListener("submit", async (e) => {
 
     const data = await res.json();
     if (data.success) {
-      authToken = data.token;
+      authToken = token;
       showControl();
     } else {
-      showLoginError("Token tidak valid.");
+      showLoginError(data.message);
     }
   } catch (err) {
     showLoginError("Gagal terhubung ke server. (" + err.message + ")");
@@ -109,8 +109,6 @@ function connectWS() {
     } catch {
       return;
     }
-
-    console.log(msg);
 
     if (msg.type === "log" && typeof msg.data === "string") {
       appendLog(msg.data);
