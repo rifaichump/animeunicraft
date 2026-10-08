@@ -1,7 +1,5 @@
 const CONFIG = {
-  authUrl: "https://api.animeunicraft.my.id/login/token",
-  apiBase: "https://api.animeunicraft.my.id/servermc",
-  checkTokenUrl: "https://api.animeunicraft.my.id", 
+  apiBase: "https://api.animeunicraft.my.id",
   wsUrl: "wss://api.animeunicraft.my.id"
 };
 
@@ -43,7 +41,7 @@ loginForm.addEventListener("submit", async (e) => {
   hideLoginError();
 
   try {
-    const res = await fetch(CONFIG.authUrl, {
+    const res = await fetch(CONFIG.apiBase + "/login/token", {
       method: "POST",
       headers: {
         'Content-Type': 'application/json'
@@ -108,7 +106,7 @@ async function checkSession() {
   try {
     try { saved = localStorage.getItem(TOKEN_KEY) || ""; } catch (e) {};
 
-    const res = await fetch(CONFIG.checkTokenUrl, {
+    const res = await fetch(CONFIG.apiBase, {
       method: "GET",
       headers: { Authorization: "Bearer " + saved },
     });
@@ -294,7 +292,7 @@ async function checkServer() {
   if (!authToken) return;
 
   try {
-    const res = await fetch(CONFIG.apiBase + "/check/server", {
+    const res = await fetch(CONFIG.apiBase + "/check/servermc", {
       method: "GET",
       headers: { Authorization: "Bearer " + authToken },
     });
@@ -322,7 +320,7 @@ async function serverAction(action) {
   applyButtonState("busy");
 
   try {
-    const res = await fetch(CONFIG.apiBase + "/" + action, {
+    const res = await fetch(CONFIG.apiBase + "/servermc/" + action, {
       method: "GET",
       headers: { Authorization: "Bearer " + authToken },
     });
