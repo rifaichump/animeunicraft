@@ -380,17 +380,17 @@ button:disabled {
     min-height: 0;
     gap: 10px;
   }
-  /* Log dibatasi setinggi ~45% layar, tombol di bawahnya */
+  /* Log dibatasi setinggi ~70% layar, tombol di bawahnya */
   #control-view .panel {
     flex: 0 0 auto;
     min-height: 0;
   }
   #control-view .log {
     flex: 0 0 auto;
-    height: 45vh;
-    height: 45dvh;
+    height: min(70vh, calc(100vh - 210px));
+    height: min(70dvh, calc(100dvh - 210px));
     min-height: 150px;
-    max-height: 45dvh;
+    max-height: 70dvh;
     overflow-y: auto;
     font-size: 12px;
     padding: 10px 12px;
