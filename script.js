@@ -249,6 +249,12 @@ async function serverAction(action) {
   const btn = btnMap[action];
 
   btn.disabled = true;
+  if (action === 'start') {
+    btnRestart = true;
+  } else if (action === 'restart') {
+    btnStart = true;
+  }
+
   appendLog(">> Melakukan: " + action);
 
   if (!connected) {
