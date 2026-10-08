@@ -368,9 +368,26 @@ button:disabled {
     white-space: nowrap;
   }
 
-  .log {
-    min-height: 220px;
-    max-height: calc(100dvh - 320px);
+  /* View control dikunci setinggi layar: log fleksibel,
+     tombol selalu terlihat tepat di bawah log (tidak ke bawah) */
+  #control-view {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  #control-view .content {
+    flex: 1;
+    min-height: 0;
+    gap: 10px;
+  }
+  #control-view .panel {
+    flex: 1;
+    min-height: 0;
+  }
+  #control-view .log {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
     font-size: 12px;
     padding: 10px 12px;
   }
