@@ -162,7 +162,7 @@ function connectWS() {
     } catch {
       return;
     }
-
+    
     if (msg.type === "log" && typeof msg.data === "string") {
       appendLog(msg.data, msg.time);
     } else if (msg.type === "getlogall" && Array.isArray(msg.data)) {
@@ -275,7 +275,7 @@ function handleActionSignal(name) {
     serverOnline = true;
     applyButtonState("online");
     setServerStatus(true);
-  } else if (n === "stoped" || n === "stopped") {
+  } else if (n === "stopped") {
     clearTimeout(stateRefreshTimer);
     stateRefreshTimer = null;
     serverOnline = false;
@@ -283,6 +283,8 @@ function handleActionSignal(name) {
     setServerStatus(false);
   } else if (n === "starting" || n === "stopping" || n === "restarting") {
     applyButtonState("busy");
+  } else if (n === "clearlog") {
+    clearLog();
   }
 }
 
