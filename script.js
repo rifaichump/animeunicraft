@@ -14,13 +14,13 @@ const loginError = document.getElementById("login-error");
 const logBox = document.getElementById("log");
 const wsStatus = document.getElementById("ws-status");
 const logoutBtn = document.getElementById("logout-btn");
-const clearLogBtn = document.getElementById("clear-log-btn");
 const autoscrollCheck = document.getElementById("autoscroll-check");
 
 const btnStart = document.getElementById("btn-start");
 const btnRestart = document.getElementById("btn-restart");
 const btnStop = document.getElementById("btn-stop");
 const actionStatus = document.getElementById("action-status");
+const serverStatus = document.getElementById("server-status");
 
 let authToken = "";
 let ws = null;
@@ -85,7 +85,6 @@ function showControl() {
   controlView.hidden = false;
   tokenInput.value = "";
   clearLog();
-  appendLog("Terhubung. Menunggu log...");
   applyButtonState("busy");
   checkServer();
   connectWS();
@@ -165,10 +164,10 @@ function connectWS() {
     }
 
     if (msg.type === "log" && typeof msg.data === "string") {
-      appendLog(msg.data);
+      appendLog(msg.data, msg.time);
     } else if (msg.type === "getlogall" && Array.isArray(msg.data)) {
       clearLog();
-      msg.data.forEach((line) => appendLog(String(line)));
+      msg.data.forEach((line) => appendLog(String(line.log), Number(line.time)));
     } else if (msg.type === "action") {
       handleActionSignal(msg.data);
     } else if (typeof msg.type === "string") {
@@ -212,13 +211,13 @@ function setWsStatus(online) {
   wsStatus.className = "badge " + (online ? "badge-on" : "badge-off");
 }
 
-function appendLog(text) {
+function appendLog(text, ms) {
   const empty = logBox.querySelector(".log-empty");
   if (empty) empty.remove();
 
   const line = document.createElement("div");
   line.className = "log-line";
-  line.textContent = "[" + timeNow() + "] " + text;
+  line.textContent = "[" + timeNow(ms) + "] " + text;
   logBox.appendChild(line);
 
   while (logBox.children.length > MAX_LOG_LINES) {
@@ -238,15 +237,20 @@ function clearLog() {
   logBox.appendChild(empty);
 }
 
-function timeNow() {
-  const d = new Date();
+function timeNow(ms) {
+  const d = new Date(ms);
   const p = (n) => String(n).padStart(2, "0");
   return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
 }
 
-clearLogBtn.addEventListener("click", clearLog);
 clearLog();
 applyButtonState("offline");
+setServerStatus(false);
+
+function setServerStatus(online) {
+  serverStatus.textContent = online ? "Server Online" : "Server Offline";
+  serverStatus.className = "badge " + (online ? "badge-on" : "badge-off");
+}
 
 function applyButtonState(state) {
   if (state === "busy") {
@@ -270,11 +274,13 @@ function handleActionSignal(name) {
     stateRefreshTimer = null;
     serverOnline = true;
     applyButtonState("online");
+    setServerStatus(true);
   } else if (n === "stoped" || n === "stopped") {
     clearTimeout(stateRefreshTimer);
     stateRefreshTimer = null;
     serverOnline = false;
     applyButtonState("offline");
+    setServerStatus(false);
   } else if (n === "starting" || n === "stopping" || n === "restarting") {
     applyButtonState("busy");
   }
@@ -306,6 +312,7 @@ async function checkServer() {
 
     serverOnline = online;
     applyButtonState(online ? "online" : "offline");
+    setServerStatus(online);
   } catch (err) {}
 }
 
@@ -315,8 +322,6 @@ async function serverAction(action) {
     setTimeout(() => (actionStatus.hidden = true), 4000);
     return;
   }
-
-  appendLog(">> Melakukan: " + action);
   applyButtonState("busy");
 
   try {
